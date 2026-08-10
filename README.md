@@ -2,7 +2,7 @@
 
 A professional, full-stack staking platform built with smart contracts and modern web technologies.
 
-**Live Site:** []
+**Live Site:** [Staking Platform](https://staking-platform.0xs.to/)
 
 ---
 
@@ -171,7 +171,7 @@ This project is part of my Web3 development portfolio showcasing:
 - Professional frontend UI/UX
 - Production-grade code quality
 
-[View Full Portfolio]
+[View Full Portfolio](https://www.0xs.to/)
 
 ## Support
 
