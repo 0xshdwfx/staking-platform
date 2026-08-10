@@ -50,6 +50,20 @@ contract StakingTest is Test {
     }
 
     ///////////////////
+    /// Constructor ///
+    ///////////////////
+
+    function testDeployRevertsIfStakingTokenAddressIsZero() public {
+        vm.expectRevert(Staking.Staking__InvalidTokenAddress.selector);
+        new Staking(address(0), address(rewardToken));
+    }
+
+    function testDeployRevertsIfRewardTokenAddressIsZero() public {
+        vm.expectRevert(Staking.Staking__InvalidTokenAddress.selector);
+        new Staking(address(stakingToken), address(0));
+    }
+
+    ///////////////////
     ///// Stake ///////
     ///////////////////
 
@@ -539,27 +553,4 @@ contract StakingTest is Test {
             "dailyRewardRate should be updated to the new rate after setRewardRate"
         );
     }
-
-    // function testSetRewardRateEmitsRewardRateUpdateEvent() public {
-    //     vm.expectEmit(false, false, false, true, address(staking));
-    //     emit RewardRateUpdate(NEW_REWARD_RATE);
-
-    //     staking.setRewardRate(NEW_REWARD_RATE);
-    // }
-
-    function testDeployRevertsIfStakingTokenAddressIsZero() public {
-        vm.expectRevert(Staking.Staking__InvalidTokenAddress.selector);
-        new Staking(address(0), address(rewardToken));
-    }
-
-    function testDeployRevertsIfRewardTokenAddressIsZero() public {
-        vm.expectRevert(Staking.Staking__InvalidTokenAddress.selector);
-        new Staking(address(stakingToken), address(0));
-    }
-
-    // function testSetRewardRateRevertsIfCallerIsNotOwner() public {
-    //     vm.prank(user);
-    //     vm.expectRevert("Ownable: caller is not the owner");
-    //     staking.setRewardRate(NEW_REWARD_RATE);
-    // }
 }
