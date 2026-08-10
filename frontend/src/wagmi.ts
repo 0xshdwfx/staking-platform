@@ -1,3 +1,5 @@
+// frontend/src/config/wagmi.ts
+
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { http } from 'viem';
 import { sepolia } from 'wagmi/chains';
@@ -15,7 +17,7 @@ export const config = getDefaultConfig({
 	projectId: '9a884bea4e5448474506781fac3613f0',
 	chains: [sepolia],
 	transports: {
-		[sepolia.id]: http(`https://sepolia-rpc.alchemyapi.io/v2/${ALCHEMY_KEY}`),
+		[sepolia.id]: http(`https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`),
 	},
 	ssr: true,
 });
