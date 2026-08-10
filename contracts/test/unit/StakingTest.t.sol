@@ -560,4 +560,11 @@ contract StakingTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));
         staking.setRewardRate(NEW_REWARD_RATE);
     }
+
+    function testSetRewardRateEmitsRewardRateUpdateEvent() public {
+        vm.expectEmit(false, false, false, true, address(staking));
+        emit RewardRateUpdate(NEW_REWARD_RATE);
+
+        staking.setRewardRate(NEW_REWARD_RATE);
+    }
 }
