@@ -6,6 +6,7 @@ import {Staking} from "../../src/Staking.sol";
 import {RewardToken} from "../../src/RewardToken.sol";
 import {StakingToken} from "../../src/StakingToken.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract StakingTest is Test {
     StakingToken public stakingToken;
@@ -552,5 +553,11 @@ contract StakingTest is Test {
             NEW_REWARD_RATE,
             "dailyRewardRate should be updated to the new rate after setRewardRate"
         );
+    }
+
+    function testSetRewardRateRevertsIfCallerIsNotOwner() public {
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));
+        staking.setRewardRate(NEW_REWARD_RATE);
     }
 }
