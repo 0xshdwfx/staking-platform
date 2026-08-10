@@ -42,6 +42,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     uint256 private constant MAX_REWARD_RATE = 2e17; // 20% annual reward rate - 0.2 * 1e18 = 2e17
 
     mapping(address => UserInfo) public userInfo;
+    mapping(address => bool) public emergencyWithdrawn;
 
     /////////////////
     /// Events //////
@@ -62,6 +63,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     error Staking__TransferFailed();
     error Staking__InvalidUserAddress();
     error Staking__AmountToUnstakeExceedsStakedAmount();
+    error Staking__CannotClaimAfterEmergencyWithdraw();
     error Staking__RewardAmountIsZero();
     error Staking__ExcessiveRewardRate();
     error Staking__AmountToWithdrawExceedsStakedAmount();
@@ -170,6 +172,9 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
      * @custom:error Staking__RewardAmountIsZero if pendingRewards == 0.
      */
     function claimReward() external nonReentrant {
+        // prevent claiming after emergency withdrawal
+        if (emergencyWithdrawn[msg.sender]) revert Staking__CannotClaimAfterEmergencyWithdraw();
+
         UserInfo storage user = userInfo[msg.sender];
 
         // update the stored state before claiming
@@ -237,6 +242,9 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         // update balances
         user.stakedAmount -= amount;
         totalStaked -= amount;
+
+        // mark user as emergency withdrawn
+        emergencyWithdrawn[msg.sender] = true;
 
         // emit event
         emit EmergencyWithdrawal(msg.sender, amount);
