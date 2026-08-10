@@ -412,6 +412,20 @@ contract StakingTest is Test {
         vm.stopPrank();
     }
 
+    function testEmergencyWithdrawalMarksUserAsEmergencyWithdrawn() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        // verify user is not marked as emergency withdrawn initially
+        assertEq(staking.emergencyWithdrawn(user), false);
+
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
+
+        assertEq(staking.emergencyWithdrawn(user), true);
+
+        vm.stopPrank();
+    }
+
     //////////////////////////
     //// CalculateReward ////
     ////////////////////////
