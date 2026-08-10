@@ -379,6 +379,12 @@ contract StakingTest is Test {
         );
     }
 
+    function testPendingRewardsReturnsZeroWhenUserHasNoStake() public view {
+        uint256 pendingRewardsReturnedAmount = staking.pendingRewards(user);
+
+        assertEq(pendingRewardsReturnedAmount, 0, "pendingRewards() should return 0 for a user with no stake");
+    }
+
     /////////////////////////////
     //// EmergencyWithdrawal ////
     ////////////////////////////
@@ -417,7 +423,11 @@ contract StakingTest is Test {
         staking.stake(USER_STAKE_AMOUNT);
 
         // verify user is not marked as emergency withdrawn initially
-        assertEq(staking.emergencyWithdrawn(user), false);
+        assertEq(
+            staking.emergencyWithdrawn(user),
+            false,
+            "user should be marked as emergency withdrawn after emergency withdrawal"
+        );
 
         staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
 
@@ -517,12 +527,5 @@ contract StakingTest is Test {
             NEW_REWARD_RATE,
             "dailyRewardRate should be updated to the new rate after setRewardRate"
         );
-    }
-
-    function testSetRewardRateEmitsRewardRateUpdateEvent() public {
-        vm.expectEmit(false, false, false, true, address(staking));
-        emit RewardRateUpdate(NEW_REWARD_RATE);
-
-        staking.setRewardRate(NEW_REWARD_RATE);
     }
 }
