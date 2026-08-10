@@ -276,6 +276,20 @@ contract StakingTest is Test {
     //// ClaimReward ////
     /////////////////////
 
+    function testClaimRewardsRevertsAfterEmergencyWithdrawal() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        vm.warp(block.timestamp + 1 days);
+
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
+
+        vm.expectRevert(Staking.Staking__CannotClaimAfterEmergencyWithdraw.selector);
+        staking.claimReward();
+
+        vm.stopPrank();
+    }
+
     function testClaimRewardsRevertsIfRewardAmountIsZero() public {
         vm.prank(user);
         vm.expectRevert(Staking.Staking__RewardAmountIsZero.selector);
