@@ -6,7 +6,11 @@ import { useRewardTokenSymbol } from '../hooks/useRewardTokenSymbol';
 import { useTransactionToast } from '../hooks/useTransactionToast';
 import { formatEther } from 'viem';
 
-export function ClaimRewards() {
+interface ClaimRewardsProps {
+	isEmergencyWithdrawing: boolean;
+}
+
+export function ClaimRewards({ isEmergencyWithdrawing }: ClaimRewardsProps) {
 	const {
 		claimReward,
 		isPending: isRewardPending,
@@ -59,7 +63,12 @@ export function ClaimRewards() {
 
 			<button
 				onClick={handleClaimReward}
-				disabled={!pendingRewards || isRewardPending || isRewardConfirming}
+				disabled={
+					!pendingRewards ||
+					isRewardPending ||
+					isRewardConfirming ||
+					isEmergencyWithdrawing
+				}
 				className='w-full px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
 			>
 				{isRewardPending ? 'Claiming...' : 'Claim Reward'}

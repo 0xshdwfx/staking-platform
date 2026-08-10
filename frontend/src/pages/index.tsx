@@ -1,6 +1,7 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { PendingRewards } from '../components/PendingRewards';
 import { StakedAmount } from '../components/StakedAmount';
 import { Stake } from '../components/Stake';
@@ -10,6 +11,8 @@ import { EmergencyWithdrawal } from '../components/EmergencyWithdrawal';
 import { BiSolidCoin } from 'react-icons/bi';
 
 const Home: NextPage = () => {
+	const [isEmergencyWithdrawing, setIsEmergencyWithdrawing] = useState(false);
+
 	return (
 		<>
 			<Head>
@@ -53,13 +56,15 @@ const Home: NextPage = () => {
 							<Unstake />
 						</div>
 						<div className='rounded-lg border border-slate-700 bg-slate-800 p-6 text-white'>
-							<ClaimRewards />
+							<ClaimRewards isEmergencyWithdrawing={isEmergencyWithdrawing} />
 						</div>
 					</div>
 
 					<div className='grid gap-6 md:grid-cols-1 mt-6'>
 						<div className='rounded-lg border border-red-700 bg-red-900/20 p-6 text-white'>
-							<EmergencyWithdrawal />
+							<EmergencyWithdrawal
+								onPendingChange={setIsEmergencyWithdrawing}
+							/>
 						</div>
 					</div>
 				</main>

@@ -7,7 +7,13 @@ import { useStakingTokenBalance } from '../hooks/useStakingTokenBalance';
 import { useStakingTokenSymbol } from '../hooks/useStakingTokenSymbol';
 import { useTransactionToast } from '../hooks/useTransactionToast';
 
-export function EmergencyWithdrawal() {
+interface EmergencyWithdrawalProps {
+	onPendingChange?: (value: boolean) => void;
+}
+
+export function EmergencyWithdrawal({
+	onPendingChange,
+}: EmergencyWithdrawalProps) {
 	const { address } = useAccount();
 
 	const [amount, setAmount] = useState('');
@@ -31,6 +37,10 @@ export function EmergencyWithdrawal() {
 		emergencyWithdrawal(amountInWei);
 		setAmount('');
 	};
+
+	useEffect(() => {
+		onPendingChange?.(isWithdrawalPending || isWithdrawalConfirming);
+	}, [isWithdrawalPending, isWithdrawalConfirming, onPendingChange]);
 
 	// Toast notifications
 	useTransactionToast({
