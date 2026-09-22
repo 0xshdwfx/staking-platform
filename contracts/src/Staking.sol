@@ -38,7 +38,12 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     RewardToken public immutable REWARD_TOKEN;
 
     uint256 public totalStaked;
-    uint256 public dailyRewardRate = 1e17; // 10% annual reward rate - 0.1 * 1e18 = 1e17
+    /**
+     * @notice Global annual reward rate in 18-decimal fixed-point format.
+     * @dev Despite the historical variable name, this value is annual rather
+     *      than daily. `1e17` represents a 10% annual reward rate.
+     */
+    uint256 public dailyRewardRate = 1e17;
     uint256 private constant MAX_REWARD_RATE = 2e17; // 20% annual reward rate - 0.2 * 1e18 = 2e17
 
     mapping(address => UserInfo) public userInfo;
@@ -273,10 +278,18 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 
     /**
      * @notice Update the annual reward rate (owner only).
-     * @param newRate The new reward rate in wei (capped at 20% APY).
-     * @dev Validates that newRate > 0 and newRate <= MAX_REWARD_RATE. Affects only
-     *      future reward calculations.
-     * @custom:error Staking__ExcessiveRewardRate if newRate is invalid or exceeds the maximum.
+     * @param newRate newRate The new annual reward rate in 18-decimal fixed-point format.
+     *                For example, `1e17` represents 10% APY.).
+     * @dev The new rate is applied to all reward accrual that has not yet been
+     *      checkpointed for each user. Consequently, changing the rate can affect
+     *      rewards accrued before the update if those rewards have not already
+     *      been stored through a state-changing interaction.
+     * 
+     *      This implementation does not provide strict future-only rate changes.
+     *      A future-only rate model would require checkpointing or a global
+     *      reward-per-token accounting redesign.
+     * @custom:error Staking__ExcessiveRewardRate if `newRate` is zero or exceeds
+     *               the maximum permitted annual reward rate.
      */
     function setRewardRate(uint256 newRate) external onlyOwner {
         if (newRate == 0 || newRate > MAX_REWARD_RATE) revert Staking__ExcessiveRewardRate();
