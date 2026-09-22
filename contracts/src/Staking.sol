@@ -69,6 +69,8 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     error Staking__InvalidUserAddress();
     error Staking__AmountToUnstakeExceedsStakedAmount();
     error Staking__CannotClaimAfterEmergencyWithdraw();
+    error Staking__EmergencyWithdrawalMustBeFullStake();
+    error Staking__CannotStakeAfterEmergencyWithdraw();
     error Staking__RewardAmountIsZero();
     error Staking__ExcessiveRewardRate();
     error Staking__AmountToWithdrawExceedsStakedAmount();
@@ -98,36 +100,43 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     ///////////////////
 
     /**
-     * @notice Stake tokens to earn rewards.
-     * @param amount Amount of staking tokens to deposit (in wei).
-     * @dev Calculates pending rewards, transfers tokens, and updates user balance.
-     *      Protected by reentrancy guard and pausable modifier.
-     * @custom:error Staking__InvalidStakeAmount if amount == 0
-     * @custom:error Staking__TransferFailed if token transfer fails
+     * @notice Stakes tokens to earn rewards.
+     * @param amount Amount of staking tokens to deposit, denominated in the
+     *        token's smallest unit.
+     * @dev A user cannot create a new staking position after using emergency
+     *      withdrawal under the current terminal-state design.
+     *
+     * @custom:error Staking__CannotStakeAfterEmergencyWithdraw if the caller
+     *               previously completed an emergency withdrawal.
+     * @custom:error Staking__InvalidStakeAmount if `amount` is zero.
+     * @custom:error Staking__TransferFailed if the staking-token transfer fails.
      */
     function stake(uint256 amount) external whenNotPaused nonReentrant {
-        // validate to ensure amount to stake is not 0
-        if (amount == 0) revert Staking__InvalidStakeAmount();
+        if (emergencyWithdrawn[msg.sender]) {
+            revert Staking__CannotStakeAfterEmergencyWithdraw();
+        }
+
+        if (amount == 0) {
+            revert Staking__InvalidStakeAmount();
+        }
 
         UserInfo storage user = userInfo[msg.sender];
 
-        // calculate and store pending rewards if user already staking
         if (user.stakedAmount > 0) {
             user.pendingRewards += calculateReward(msg.sender);
         }
 
-        // reset the time - start measuring rewards from now
         user.lastRewardTime = block.timestamp;
 
-        // transfer staking token from user to the contract
         bool success = STAKING_TOKEN.transferFrom(msg.sender, address(this), amount);
-        if (!success) revert Staking__TransferFailed();
 
-        // update balances
+        if (!success) {
+            revert Staking__TransferFailed();
+        }
+
         user.stakedAmount += amount;
         totalStaked += amount;
 
-        // emit event
         emit StakeAdded(msg.sender, amount);
     }
 
@@ -223,36 +232,50 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Emergency withdrawal of staked tokens, bypassing the pause mechanism.
-     * @param amount The amount of staking tokens to withdraw.
-     * @dev Users forfeit all pending rewards for immediate principal recovery. Works even
-     *      when contract is paused. Validates sufficient balance before transfer.
-     * @custom:error Staking__InvalidStakeAmount if amount == 0.
-     * @custom:error Staking__AmountToWithdrawExceedsStakedAmount if amount > staked balance.
-     * @custom:error Staking__TransferFailed if token transfer fails.
+     * @notice Performs a full emergency withdrawal of the caller's staked tokens.
+     * @param amount The caller's complete staked balance.
+     * @dev Emergency withdrawal bypasses the pause mechanism and forfeits all
+     *      pending rewards. Partial emergency withdrawals are not permitted.
+     *      After emergency withdrawal, the caller cannot claim rewards or create
+     *      a new staking position under the current contract design.
+     * @custom:error Staking__InvalidStakeAmount if `amount` is zero.
+     * @custom:error Staking__AmountToWithdrawExceedsStakedAmount if `amount`
+     *      exceeds the caller's staked balance.
+     * @custom:error Staking__EmergencyWithdrawalMustBeFullStake if `amount`
+     *      is less than the caller's complete staked balance.
+     * @custom:error Staking__TransferFailed if the staking-token transfer fails.
      */
     function emergencyWithdrawal(uint256 amount) external nonReentrant {
-        // validate to ensure amount to unstake is not 0
-        if (amount == 0) revert Staking__InvalidStakeAmount();
+        if (amount == 0) {
+            revert Staking__InvalidStakeAmount();
+        }
 
         UserInfo storage user = userInfo[msg.sender];
 
-        // validate to ensure user has enough staked before withdrawing
-        if (amount > user.stakedAmount) revert Staking__AmountToWithdrawExceedsStakedAmount();
+        if (amount > user.stakedAmount) {
+            revert Staking__AmountToWithdrawExceedsStakedAmount();
+        }
 
-        // transfer users staked tokens from contract back to user
-        bool success = STAKING_TOKEN.transfer(msg.sender, amount);
-        if (!success) revert Staking__TransferFailed();
+        if (amount != user.stakedAmount) {
+            revert Staking__EmergencyWithdrawalMustBeFullStake();
+        }
 
-        // update balances
-        user.stakedAmount -= amount;
-        totalStaked -= amount;
+        uint256 withdrawnAmount = user.stakedAmount;
 
-        // mark user as emergency withdrawn
+        user.stakedAmount = 0;
+        user.pendingRewards = 0;
+        user.lastRewardTime = block.timestamp;
+
+        totalStaked -= withdrawnAmount;
         emergencyWithdrawn[msg.sender] = true;
 
-        // emit event
-        emit EmergencyWithdrawal(msg.sender, amount);
+        bool success = STAKING_TOKEN.transfer(msg.sender, withdrawnAmount);
+
+        if (!success) {
+            revert Staking__TransferFailed();
+        }
+
+        emit EmergencyWithdrawal(msg.sender, withdrawnAmount);
     }
 
     /**
@@ -284,7 +307,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
      *      checkpointed for each user. Consequently, changing the rate can affect
      *      rewards accrued before the update if those rewards have not already
      *      been stored through a state-changing interaction.
-     * 
+     *
      *      This implementation does not provide strict future-only rate changes.
      *      A future-only rate model would require checkpointing or a global
      *      reward-per-token accounting redesign.
