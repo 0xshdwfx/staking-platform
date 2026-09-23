@@ -71,9 +71,9 @@ All contracts are deployed on **Sepolia Testnet** and verified on Etherscan.
 
 | Contract               | Address                                      | Verified Source                                                                                   |
 | ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Staking**            | `0xf468Ff6aadb4e5eBffA59176873977A510A0fcAA` | [View Code](https://sepolia.etherscan.io/address/0xf468Ff6aadb4e5eBffA59176873977A510A0fcAA#code) |
-| **StakingToken (STK)** | `0x2bef52e3f90a10c24570835c105cb2e6e11ae8bc` | [View Code](https://sepolia.etherscan.io/address/0x2bef52e3f90a10c24570835c105cb2e6e11ae8bc#code) |
-| **RewardToken (RWT)**  | `0x919325462035ef8f455f4271deb6a9786872f990` | [View Code](https://sepolia.etherscan.io/address/0x919325462035ef8f455f4271deb6a9786872f990#code) |
+| **Staking**            | `0x311124F2053389962ba2F3D389687Cb0d07c27F4` | [View Code](https://sepolia.etherscan.io/address/0x311124F2053389962ba2F3D389687Cb0d07c27F4#code) |
+| **StakingToken (STK)** | `0xd0Db12859F3200e7b947b823F10dc7A460328C03` | [View Code](https://sepolia.etherscan.io/address/0xd0Db12859F3200e7b947b823F10dc7A460328C03#code) |
+| **RewardToken (RWT)**  | `0x952F36979e0b61d81f86dbfDB36c16535713757A` | [View Code](https://sepolia.etherscan.io/address/0x952F36979e0b61d81f86dbfDB36c16535713757A#code) |
 
 ---
 

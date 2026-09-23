@@ -1,7 +1,7 @@
 {
   "transactions": [
     {
-      "hash": "0xc331f0938b7f174807853d00b582efe4af4fd000c93349fd591548e1a9ad45e2",
+      "hash": null,
       "transactionType": "CREATE",
       "contractName": "StakingToken",
       "contractAddress": "0xd0db12859f3200e7b947b823f10dc7a460328c03",
@@ -19,7 +19,7 @@
       "isFixedGasLimit": false
     },
     {
-      "hash": "0xead2ecda45b8f5ade6dc9ff512f2cc15991e1964b26c070b4e674345a92c7f7a",
+      "hash": null,
       "transactionType": "CREATE",
       "contractName": "RewardToken",
       "contractAddress": "0x952f36979e0b61d81f86dbfdb36c16535713757a",
@@ -81,12 +81,9 @@
   ],
   "receipts": [],
   "libraries": [],
-  "pending": [
-    "0xc331f0938b7f174807853d00b582efe4af4fd000c93349fd591548e1a9ad45e2",
-    "0xead2ecda45b8f5ade6dc9ff512f2cc15991e1964b26c070b4e674345a92c7f7a"
-  ],
+  "pending": [],
   "returns": {},
-  "timestamp": 1790177540864,
+  "timestamp": 1790177424644,
   "chain": 11155111,
   "commit": "b1f7f39"
 }
