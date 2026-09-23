@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { parseEther, formatEther } from 'viem';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { toast } from 'sonner';
 import { useStake } from '../hooks/useStake';
 import { useStakingTokenBalance } from '../hooks/useStakingTokenBalance';
 import { useStakingTokenAllowance } from '../hooks/useStakingTokenAllowance';
@@ -12,6 +13,7 @@ import { useTransactionToast } from '../hooks/useTransactionToast';
 
 export function Stake() {
 	const { address } = useAccount();
+	const { data: nativeBalance } = useBalance({ address });
 
 	const [amount, setAmount] = useState('');
 	const {
@@ -36,6 +38,18 @@ export function Stake() {
 	const { symbol: stakingTokenSymbol } = useStakingTokenSymbol();
 
 	const isApproved = allowance && allowance > 0n;
+
+	const handleApprove = () => {
+		if (!nativeBalance || nativeBalance.value === 0n) {
+			toast.error(
+				'Approval unavailable: this wallet has no Sepolia ETH for gas.',
+				{ duration: 10000 },
+			);
+			return;
+		}
+
+		approve();
+	};
 
 	const handleStake = () => {
 		if (!amount) return;
@@ -67,6 +81,7 @@ export function Stake() {
 		pendingMessage: 'Confirm approval in Wallet...',
 		confirmingMessage: 'Confirming approval on blockchain...',
 		successMessage: 'Approval successful! Now you can stake.',
+		operation: 'approve',
 	});
 
 	// Stake toasts
@@ -105,8 +120,8 @@ export function Stake() {
 
 			{!isApproved ? (
 				<button
-					onClick={approve}
-					disabled={isApprovePending || !address}
+						onClick={handleApprove}
+						disabled={isApprovePending || !address}
 					className='w-full px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
 				>
 					{isApprovePending ? 'Approving...' : `Approve ${stakingTokenSymbol}`}
