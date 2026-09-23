@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { formatEther, parseEther } from 'viem';
+import { useEffect } from 'react';
+import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { useEmergencyWithdrawal } from '../hooks/useEmergencyWithdrawal';
 import { useStakedAmount } from '../hooks/useStakedAmount';
@@ -16,7 +16,6 @@ export function EmergencyWithdrawal({
 }: EmergencyWithdrawalProps) {
 	const { address } = useAccount();
 
-	const [amount, setAmount] = useState('');
 	const {
 		emergencyWithdrawal,
 		isPending: isWithdrawalPending,
@@ -32,10 +31,8 @@ export function EmergencyWithdrawal({
 	const formattedStakedAmount = formatEther(stakedAmount || 0n);
 
 	const handleEmergencyWithdrawal = () => {
-		if (!amount) return;
-		const amountInWei = parseEther(amount);
-		emergencyWithdrawal(amountInWei);
-		setAmount('');
+		if (stakedAmount === 0n) return;
+		emergencyWithdrawal(stakedAmount ?? 0n);
 	};
 
 	useEffect(() => {
@@ -56,11 +53,10 @@ export function EmergencyWithdrawal({
 
 	// Refetch data after successful withdrawal
 	useEffect(() => {
-		if (isWithdrawalSuccess) {
-			refetchBalance();
-			refetchStaked();
-			setAmount('');
-		}
+			if (isWithdrawalSuccess) {
+				refetchBalance();
+				refetchStaked();
+			}
 	}, [isWithdrawalSuccess, refetchBalance, refetchStaked]);
 
 	return (
@@ -74,29 +70,30 @@ export function EmergencyWithdrawal({
 				rewards
 			</p>
 
-			<p className='text-sm text-slate-400 mb-4'>
-				Available:{' '}
-				<span className='text-white font-semibold'>
-					{parseFloat(formattedStakedAmount).toFixed(4)} {stakingTokenSymbol}
-				</span>
-			</p>
+				<p className='text-sm text-slate-400 mb-4'>
+					Full balance available:{' '}
+					<span className='text-white font-semibold'>
+						{parseFloat(formattedStakedAmount).toFixed(4)} {stakingTokenSymbol}
+					</span>
+				</p>
 
-			<input
-				type='number'
-				placeholder='Amount to withdraw'
-				value={amount}
-				onChange={(e) => setAmount(e.target.value)}
-				disabled={isWithdrawalPending || isWithdrawalConfirming || !address}
-				className='w-full mb-4 px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
-			/>
+				<p className='text-xs text-slate-500 mb-4'>
+					Emergency withdrawal returns your full staked balance, forfeits pending
+					rewards, and permanently closes this wallet's staking position.
+				</p>
 
-			<button
-				onClick={handleEmergencyWithdrawal}
-				disabled={isWithdrawalPending || isWithdrawalConfirming || !amount}
-				className='w-full px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
-			>
-				{isWithdrawalPending ? 'Withdrawing...' : 'Emergency Withdrawal'}
-			</button>
+				<button
+					onClick={handleEmergencyWithdrawal}
+					disabled={
+						isWithdrawalPending ||
+						isWithdrawalConfirming ||
+						!address ||
+						stakedAmount === 0n
+					}
+					className='w-full px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
+				>
+					{isWithdrawalPending ? 'Withdrawing...' : 'Withdraw Full Balance'}
+				</button>
 		</div>
 	);
 }
