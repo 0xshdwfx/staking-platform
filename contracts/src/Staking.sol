@@ -2,6 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -20,6 +21,8 @@ import {RewardToken} from "./RewardToken.sol";
  */
 
 contract Staking is Ownable, ReentrancyGuard, Pausable {
+    using SafeERC20 for IERC20;
+
     ////////////////
     //// Types ////
     ///////////////
@@ -65,7 +68,6 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 
     error Staking__InvalidTokenAddress();
     error Staking__InvalidStakeAmount();
-    error Staking__TransferFailed();
     error Staking__InvalidUserAddress();
     error Staking__AmountToUnstakeExceedsStakedAmount();
     error Staking__CannotClaimAfterEmergencyWithdraw();
@@ -109,7 +111,6 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
      * @custom:error Staking__CannotStakeAfterEmergencyWithdraw if the caller
      *               previously completed an emergency withdrawal.
      * @custom:error Staking__InvalidStakeAmount if `amount` is zero.
-     * @custom:error Staking__TransferFailed if the staking-token transfer fails.
      */
     function stake(uint256 amount) external whenNotPaused nonReentrant {
         if (emergencyWithdrawn[msg.sender]) {
@@ -128,11 +129,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 
         user.lastRewardTime = block.timestamp;
 
-        bool success = STAKING_TOKEN.transferFrom(msg.sender, address(this), amount);
-
-        if (!success) {
-            revert Staking__TransferFailed();
-        }
+        STAKING_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
 
         user.stakedAmount += amount;
         totalStaked += amount;
@@ -147,7 +144,6 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
      *      Protected by reentrancy guard and pausable modifier.
      * @custom:error Staking__InvalidStakeAmount if amount == 0.
      * @custom:error Staking__AmountToUnstakeExceedsStakedAmount if unstake amount is greater than staked amount.
-     * @custom:error Staking__TransferFailed if token transfer fails.
      */
     function unstake(uint256 amount) external whenNotPaused nonReentrant {
         // validate to ensure amount to unstake is not 0
@@ -167,8 +163,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         user.lastRewardTime = block.timestamp;
 
         // transfer users staked tokens from contract back to user
-        bool success = STAKING_TOKEN.transfer(msg.sender, amount);
-        if (!success) revert Staking__TransferFailed();
+        STAKING_TOKEN.safeTransfer(msg.sender, amount);
 
         // update balances
         user.stakedAmount -= amount;
@@ -243,7 +238,6 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
      *      exceeds the caller's staked balance.
      * @custom:error Staking__EmergencyWithdrawalMustBeFullStake if `amount`
      *      is less than the caller's complete staked balance.
-     * @custom:error Staking__TransferFailed if the staking-token transfer fails.
      */
     function emergencyWithdrawal(uint256 amount) external nonReentrant {
         if (amount == 0) {
@@ -269,11 +263,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         totalStaked -= withdrawnAmount;
         emergencyWithdrawn[msg.sender] = true;
 
-        bool success = STAKING_TOKEN.transfer(msg.sender, withdrawnAmount);
-
-        if (!success) {
-            revert Staking__TransferFailed();
-        }
+        STAKING_TOKEN.safeTransfer(msg.sender, withdrawnAmount);
 
         emit EmergencyWithdrawal(msg.sender, withdrawnAmount);
     }
