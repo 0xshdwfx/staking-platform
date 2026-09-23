@@ -17,7 +17,7 @@ A secure and efficient ERC20 staking platform that allows users to stake STK tok
 - **Stake & Unstake:** Deposit and withdraw STK tokens anytime
 - **Earn Rewards:** Automatically accrue RWT rewards based on staked amount and time
 - **Claim Rewards:** Withdraw earned rewards independent of staked principal
-- **Emergency Withdrawal:** Immediate exit mechanism (forfeits pending rewards)
+- **Emergency Withdrawal:** Terminal full-exit mechanism that immediately returns principal and forfeits pending rewards
 - **Real-time Tracking:** Live reward calculations and balance updates
 - **Professional UI:** Responsive Tailwind CSS interface with transaction notifications
 - **Contract Verification:** All smart contracts verified on Etherscan for transparency
@@ -57,9 +57,11 @@ A secure and efficient ERC20 staking platform that allows users to stake STK tok
 
 ### 6. Emergency Withdrawal
 
-- Use only when you need immediate exit
+- Use only when you need an immediate full exit
 - **⚠️ Warning:** Forfeits all pending rewards
-- Transfers your staked STK immediately
+- The full staked balance must be withdrawn; partial emergency withdrawals revert
+- Transfers the complete staked STK balance immediately
+- The address cannot stake again after an emergency withdrawal under the current terminal-state design
 
 ---
 
@@ -83,11 +85,11 @@ Rewards accumulate continuously based on:
 
 - **Your staked amount** (STK)
 - **Time staked** (seconds since last action)
-- **Daily reward rate** (10% annual)
+- **Annual reward rate** (10% annual; retained legacy daily-rate naming in the contract interface)
 
 ### Formula
 
-Reward = (Staked Amount × Time Elapsed × Daily Rate) / (365 days)
+Reward = (Staked Amount × Time Elapsed × Annual Rate) / (365 days)
 
 ### Example
 
@@ -100,6 +102,21 @@ Reward = (1 × 86,400 seconds × 0.1) / (31,536,000 seconds) ≈ 0.000274 RWT
 - Rewards are **calculated in real-time** but only "finalized" when you stake, unstake, or claim
 - You can claim rewards **anytime** without unstaking
 - Pending rewards are **preserved** when you unstake (only forfeited in emergency withdrawal)
+- Reward-rate updates apply the new global rate to all uncheckpointed accrual, including time elapsed before the update
+
+---
+
+## Implementation Scope and Limitations
+
+The current implementation deliberately preserves the existing application architecture and public interface while applying targeted contract hardening:
+
+- Emergency withdrawal is a terminal full exit: partial withdrawals revert, pending rewards are forfeited, and post-exit staking is blocked
+- OpenZeppelin `SafeERC20` is used for staking, unstaking, and emergency-withdrawal token transfers
+- Reward tokens are minted by the staking contract without a prefunded reward reserve or hard emission cap
+- Fee-on-transfer and deflationary staking tokens are not supported through balance-delta accounting; the project assumes standard ERC20 transfer semantics
+- Reward-rate updates are not checkpointed per user, so a new rate applies to all uncheckpointed accrual, including time elapsed before the update
+
+These trade-offs are intentional for this Sepolia portfolio demonstration. The Foundry test suite passes, and the repository changes are committed and up to date.
 
 ---
 
