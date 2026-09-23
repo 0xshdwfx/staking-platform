@@ -64,10 +64,14 @@ function parseErrorMessage(
 		lowerError.includes('cannot estimate gas');
 
 	if (operation === 'stake' && isGasEstimationError) {
-		return 'Emergency withdrawal completed. This wallet cannot stake again.';
-	}
+			return 'Emergency withdrawal completed. This wallet cannot stake again.';
+		}
 
-	if (isGasEstimationError) return 'Transaction gas limit exceeded';
+		if (operation === 'approve' && isGasEstimationError) {
+			return 'Approval unavailable: this wallet has no STK balance.';
+		}
+
+		if (isGasEstimationError) return 'Transaction gas limit exceeded';
 	if (errorStr.includes('User rejected')) return 'Transaction rejected';
 
 	return errorStr.substring(0, 100);
