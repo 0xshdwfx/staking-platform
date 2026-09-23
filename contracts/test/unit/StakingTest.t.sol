@@ -462,6 +462,81 @@ contract StakingTest is Test {
         vm.stopPrank();
     }
 
+    function testEmergencyWithdrawalRevertsForPartialAmount() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        vm.expectRevert(Staking.Staking__EmergencyWithdrawalMustBeFullStake.selector);
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT / 2);
+
+        vm.stopPrank();
+    }
+
+    function testEmergencyWithdrawalClearsStakeAndTotalStaked() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
+
+        Staking.UserInfo memory userInfo = staking.getUserInfo(user);
+
+        vm.stopPrank();
+
+        assertEq(userInfo.stakedAmount, 0);
+        assertEq(staking.getTotalStaked(), 0);
+    }
+
+    function testEmergencyWithdrawalForfeitsPendingRewards() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        vm.warp(block.timestamp + TIME_ELAPSED_ONE_DAY);
+
+        // Checkpoint accrued rewards into pendingRewards.
+        staking.stake(USER_STAKE_AMOUNT);
+
+        Staking.UserInfo memory userInfoBeforeWithdrawal = staking.getUserInfo(user);
+        assertGt(userInfoBeforeWithdrawal.pendingRewards, 0);
+
+        // The full emergency exit must forfeit those rewards.
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT * 2);
+
+        Staking.UserInfo memory userInfoAfterWithdrawal = staking.getUserInfo(user);
+
+        vm.stopPrank();
+
+        assertEq(userInfoAfterWithdrawal.stakedAmount, 0);
+        assertEq(userInfoAfterWithdrawal.pendingRewards, 0);
+        assertEq(staking.getTotalStaked(), 0);
+    }
+
+    function testStakeRevertsAfterEmergencyWithdrawal() public {
+        vm.startPrank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
+
+        vm.expectRevert(Staking.Staking__CannotStakeAfterEmergencyWithdraw.selector);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        vm.stopPrank();
+    }
+
+    function testEmergencyWithdrawalWorksWhenContractIsPaused() public {
+        vm.prank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        staking.pause();
+
+        vm.prank(user);
+        staking.emergencyWithdrawal(USER_STAKE_AMOUNT);
+
+        Staking.UserInfo memory userInfo = staking.getUserInfo(user);
+
+        assertEq(userInfo.stakedAmount, 0);
+        assertEq(staking.getTotalStaked(), 0);
+        assertTrue(staking.emergencyWithdrawn(user));
+    }
+
     //////////////////////////
     //// CalculateReward ////
     ////////////////////////
