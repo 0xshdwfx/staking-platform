@@ -372,6 +372,16 @@ export const STAKING_ABI = [
 	{ type: 'error', name: 'Staking__InvalidStakeAmount', inputs: [] },
 	{ type: 'error', name: 'Staking__InvalidTokenAddress', inputs: [] },
 	{ type: 'error', name: 'Staking__InvalidUserAddress', inputs: [] },
+	{
+		type: 'error',
+		name: 'Staking__EmergencyWithdrawalMustBeFullStake',
+		inputs: [],
+	},
+	{
+		type: 'error',
+		name: 'Staking__CannotStakeAfterEmergencyWithdraw',
+		inputs: [],
+	},
 	{ type: 'error', name: 'Staking__RewardAmountIsZero', inputs: [] },
 	{ type: 'error', name: 'Staking__TransferFailed', inputs: [] },
 ];

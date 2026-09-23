@@ -9,9 +9,13 @@ interface TransactionToastConfig {
 	pendingMessage: string;
 	confirmingMessage: string;
 	successMessage: string;
+	operation?: 'stake' | 'unstake' | 'claimReward' | 'emergencyWithdrawal' | 'approve';
 }
 
-function parseErrorMessage(error: unknown): string {
+function parseErrorMessage(
+	error: unknown,
+	operation?: TransactionToastConfig['operation'],
+): string {
 	if (!error) return 'An error occurred';
 
 	const errorObj = error as any;
@@ -44,12 +48,26 @@ function parseErrorMessage(error: unknown): string {
 	if (errorObj.details?.includes('InsufficientAllowance'))
 		return 'Insufficient token allowance';
 	if (errorObj.details?.includes('InsufficientBalance'))
-		return 'Insufficient token balance';
+			return 'Insufficient token balance';
+		if (
+			errorObj.details?.includes('CannotStakeAfterEmergencyWithdraw') ||
+			errorObj.shortMessage?.includes('CannotStakeAfterEmergencyWithdraw') ||
+			errorObj.cause?.details?.includes('CannotStakeAfterEmergencyWithdraw')
+		)
+			return 'Emergency withdrawal completed. This wallet cannot stake again.';
 
 	const errorStr = String(error);
+	const lowerError = errorStr.toLowerCase();
+	const isGasEstimationError =
+		lowerError.includes('gas limit') ||
+		lowerError.includes('gas required exceeds allowance') ||
+		lowerError.includes('cannot estimate gas');
 
-	if (errorStr.includes('gas limit too high'))
-		return 'Transaction gas limit exceeded';
+	if (operation === 'stake' && isGasEstimationError) {
+		return 'Emergency withdrawal completed. This wallet cannot stake again.';
+	}
+
+	if (isGasEstimationError) return 'Transaction gas limit exceeded';
 	if (errorStr.includes('User rejected')) return 'Transaction rejected';
 
 	return errorStr.substring(0, 100);
@@ -64,6 +82,7 @@ export function useTransactionToast(config: TransactionToastConfig) {
 		pendingMessage,
 		confirmingMessage,
 		successMessage,
+		operation,
 	} = config;
 
 	useEffect(() => {
@@ -104,7 +123,7 @@ export function useTransactionToast(config: TransactionToastConfig) {
 	useEffect(() => {
 		if (error) {
 			toast.dismiss();
-			const friendlyMessage = parseErrorMessage(error);
+				const friendlyMessage = parseErrorMessage(error, operation);
 			toast.error(friendlyMessage, {
 				duration: 10000,
 				style: {
@@ -113,5 +132,5 @@ export function useTransactionToast(config: TransactionToastConfig) {
 				},
 			});
 		}
-	}, [error]);
+	}, [error, operation]);
 }

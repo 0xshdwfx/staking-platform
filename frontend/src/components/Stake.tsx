@@ -78,6 +78,7 @@ export function Stake() {
 		pendingMessage: 'Transaction pending... confirm in Wallet',
 		confirmingMessage: 'Waiting for blockchain confirmation...',
 		successMessage: 'Stake successful!',
+		operation: 'stake',
 	});
 
 	return (
