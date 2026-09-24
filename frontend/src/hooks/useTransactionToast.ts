@@ -18,9 +18,31 @@ function parseErrorMessage(
 ): string {
 	if (!error) return 'An error occurred';
 
-	const errorObj = error as any;
+	const errorObj = error as {
+		functionName?: string;
+		args?: readonly unknown[];
+		details?: string;
+		shortMessage?: string;
+		message?: string;
+		cause?: {
+			details?: string;
+			shortMessage?: string;
+			message?: string;
+		};
+	};
 	const functionName = errorObj.functionName;
 	const args = errorObj.args?.[0];
+	const errorText = [
+		errorObj.details,
+		errorObj.shortMessage,
+		errorObj.message,
+		errorObj.cause?.details,
+		errorObj.cause?.shortMessage,
+		errorObj.cause?.message,
+		String(error),
+	]
+		.filter(Boolean)
+		.join(' ');
 
 	// Generic check: if amount is 0
 	if (args === 0n) {
@@ -34,27 +56,20 @@ function parseErrorMessage(
 	}
 
 	// Generic error checks
-	if (
-		errorObj.details?.includes('InvalidStakeAmount') ||
-		errorObj.shortMessage?.includes('InvalidStakeAmount')
-	)
+	if (errorText.includes('InvalidStakeAmount'))
 		return 'Invalid stake amount';
-	if (errorObj.details?.includes('AmountToUnstakeExceedsStakedAmount'))
+	if (errorText.includes('AmountToUnstakeExceedsStakedAmount'))
 		return 'Cannot unstake more than your staked amount';
-	if (errorObj.details?.includes('AmountToWithdrawExceedsStakedAmount'))
+	if (errorText.includes('AmountToWithdrawExceedsStakedAmount'))
 		return 'Cannot withdraw more than your staked amount';
-	if (errorObj.details?.includes('RewardAmountIsZero'))
+	if (errorText.includes('RewardAmountIsZero'))
 		return 'No pending rewards to claim';
-	if (errorObj.details?.includes('InsufficientAllowance'))
+	if (errorText.includes('InsufficientAllowance'))
 		return 'Insufficient token allowance';
-	if (errorObj.details?.includes('InsufficientBalance'))
-			return 'Insufficient token balance';
-		if (
-			errorObj.details?.includes('CannotStakeAfterEmergencyWithdraw') ||
-			errorObj.shortMessage?.includes('CannotStakeAfterEmergencyWithdraw') ||
-			errorObj.cause?.details?.includes('CannotStakeAfterEmergencyWithdraw')
-		)
-			return 'Emergency withdrawal completed. This wallet cannot stake again.';
+	if (errorText.includes('InsufficientBalance'))
+		return 'Insufficient token balance';
+	if (errorText.includes('CannotStakeAfterEmergencyWithdraw'))
+		return 'Emergency withdrawal completed. This wallet cannot stake again.';
 
 	const errorStr = String(error);
 	const lowerError = errorStr.toLowerCase();
@@ -63,15 +78,11 @@ function parseErrorMessage(
 		lowerError.includes('gas required exceeds allowance') ||
 		lowerError.includes('cannot estimate gas');
 
-	if (operation === 'stake' && isGasEstimationError) {
-			return 'Emergency withdrawal completed. This wallet cannot stake again.';
-		}
+	if (operation === 'approve' && isGasEstimationError) {
+		return 'Approval unavailable: this wallet has insufficient Sepolia ETH for gas.';
+	}
 
-		if (operation === 'approve' && isGasEstimationError) {
-			return 'Approval unavailable: this wallet has no STK balance.';
-		}
-
-		if (isGasEstimationError) return 'Transaction gas limit exceeded';
+	if (isGasEstimationError) return 'Transaction could not be estimated. Check your STK balance and Sepolia ETH.';
 	if (errorStr.includes('User rejected')) return 'Transaction rejected';
 
 	return errorStr.substring(0, 100);
