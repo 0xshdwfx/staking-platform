@@ -31,6 +31,21 @@ A secure and efficient ERC20 staking platform that allows users to stake STK tok
 - Click "Connect Wallet" in the top-right corner
 - Approve the connection in MetaMask/your Web3 wallet
 
+### Getting STK for Testing
+
+The current `StakingToken` contract does not include a public faucet, mint function, or token-claim flow. Anyone testing the platform therefore needs:
+
+- Sepolia ETH for transaction fees, obtained from a Sepolia faucet
+- STK transferred to their wallet by the project owner
+
+The current STK contract is:
+
+```text
+0xd0Db12859F3200e7b947b823F10dc7A460328C03
+```
+
+Import this address into the wallet if STK is not displayed automatically. Do not use an older STK deployment with the current staking contract. The imported token address must match the address listed in the [verified contract table](#smart-contracts).
+
 ### 2. View Your Stats
 
 - **Staked Amount:** See how much STK you have locked in staking
