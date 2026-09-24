@@ -59,7 +59,7 @@ export function Stake() {
 	};
 
 	const formattedBalance = stakingTokenBalance
-		? parseFloat(formatEther(stakingTokenBalance)).toFixed(4)
+		? formatEther(stakingTokenBalance)
 		: '0.00';
 
 	// Refetch data after successful stake
