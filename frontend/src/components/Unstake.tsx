@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 import { useAccount } from 'wagmi';
+import { toast } from 'sonner';
 import { useUnstake } from '../hooks/useUnstake';
 import { useStakedAmount } from '../hooks/useStakedAmount';
 import { usePendingRewards } from '../hooks/usePendingRewards';
@@ -18,6 +19,7 @@ export function Unstake() {
 		isConfirming: isUnstakeConfirming,
 		error: unstakeError,
 		isSuccess: isUnstakeSuccess,
+		paused,
 	} = useUnstake();
 	const { refetch: refetchBalance } = useStakingTokenBalance();
 	const { refetch: refetchStaked } = useStakedAmount();
@@ -28,6 +30,13 @@ export function Unstake() {
 	const formattedStakedAmount = formatEther(stakedAmount || 0n);
 
 	const handleUnstake = () => {
+		if (paused) {
+			toast.error('Staking is temporarily paused by the contract owner.', {
+				duration: 10000,
+			});
+			return;
+		}
+
 		if (!amount) return;
 		const amountInWei = parseEther(amount);
 		unstake(amountInWei);
@@ -43,6 +52,7 @@ export function Unstake() {
 		pendingMessage: 'Transaction pending... confirm in Wallet',
 		confirmingMessage: 'Waiting for blockchain confirmation...',
 		successMessage: 'Unstake successful!',
+		operation: 'unstake',
 	});
 
 	// Refetch data after successful unstake

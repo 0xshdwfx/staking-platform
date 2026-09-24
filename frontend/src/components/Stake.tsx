@@ -23,6 +23,7 @@ export function Stake() {
 		error: stakeError,
 		isSuccess: isStakeSuccess,
 		emergencyWithdrawn,
+		paused,
 	} = useStake();
 	const { stakingTokenBalance, refetch: refetchBalance } =
 		useStakingTokenBalance();
@@ -53,6 +54,13 @@ export function Stake() {
 	};
 
 	const handleStake = () => {
+		if (paused) {
+			toast.error('Staking is temporarily paused by the contract owner.', {
+				duration: 10000,
+			});
+			return;
+		}
+
 		if (emergencyWithdrawn) {
 			toast.error('Emergency withdrawal completed. This wallet cannot stake again.', {
 				duration: 10000,

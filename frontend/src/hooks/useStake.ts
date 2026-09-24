@@ -15,6 +15,11 @@ export function useStake() {
 		args: [address],
 		query: { enabled: !!address },
 	});
+	const { data: paused } = useReadContract({
+		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
+		abi: STAKING_ABI,
+		functionName: 'paused',
+	});
 
 	const { writeContract, isPending, data: hash, error } = useWriteContract();
 
@@ -44,5 +49,6 @@ export function useStake() {
 		isSuccess,
 		error,
 		emergencyWithdrawn: emergencyWithdrawn === true,
+		paused: paused === true,
 	};
 }

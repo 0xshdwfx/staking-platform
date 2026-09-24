@@ -1,4 +1,5 @@
 import {
+	useReadContract,
 	useWriteContract,
 	useAccount,
 	useWaitForTransactionReceipt,
@@ -7,6 +8,11 @@ import { CONTRACT_ADDRESSES, STAKING_ABI } from '../config/contracts';
 
 export function useUnstake() {
 	const { address } = useAccount();
+	const { data: paused } = useReadContract({
+		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
+		abi: STAKING_ABI,
+		functionName: 'paused',
+	});
 
 	const { writeContract, isPending, data: hash, error } = useWriteContract();
 
@@ -15,6 +21,10 @@ export function useUnstake() {
 	});
 
 	const unstake = (amount: bigint) => {
+		if (paused === true) {
+			return;
+		}
+
 		writeContract({
 			address: CONTRACT_ADDRESSES.staking as `0x${string}`,
 			abi: STAKING_ABI,
@@ -30,5 +40,6 @@ export function useUnstake() {
 		isConfirming,
 		isSuccess,
 		error,
+		paused: paused === true,
 	};
 }
