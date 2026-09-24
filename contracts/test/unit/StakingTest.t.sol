@@ -630,6 +630,32 @@ contract StakingTest is Test {
         );
     }
 
+    /**
+     * @notice Documents the current simplified reward-rate semantics.
+     * @dev Because accrual is not checkpointed when the rate changes, the new
+     *      rate is applied to the full uncheckpointed period on the next read
+     *      or state-changing interaction. A production implementation should
+     *      use rate-period checkpoints or reward-per-token accounting instead.
+     */
+    function testRewardRateChangeAppliesToUncheckpointedAccrual() public {
+        vm.prank(user);
+        staking.stake(USER_STAKE_AMOUNT);
+
+        vm.warp(block.timestamp + TIME_ELAPSED_ONE_DAY);
+        staking.setRewardRate(NEW_REWARD_RATE);
+
+        vm.warp(block.timestamp + TIME_ELAPSED_ONE_DAY);
+
+        uint256 expectedReward =
+            (USER_STAKE_AMOUNT * 2 days * NEW_REWARD_RATE) / (365 * 1e18);
+
+        assertEq(
+            staking.calculateReward(user),
+            expectedReward,
+            "the current rate applies to the full uncheckpointed period"
+        );
+    }
+
     function testSetRewardRateRevertsIfCallerIsNotOwner() public {
         vm.prank(user);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));

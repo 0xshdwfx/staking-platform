@@ -117,7 +117,12 @@ Reward = (1 × 86,400 seconds × 0.1) / (31,536,000 seconds) ≈ 0.000274 RWT
 - Rewards are **calculated in real-time** but only "finalized" when you stake, unstake, or claim
 - You can claim rewards **anytime** without unstaking
 - Pending rewards are **preserved** when you unstake (only forfeited in emergency withdrawal)
-- Reward-rate updates apply the new global rate to all uncheckpointed accrual, including time elapsed before the update
+
+### Known Accounting Limitation
+
+`setRewardRate()` updates one global annual rate. User accrual is not checkpointed when the owner changes that rate. Consequently, when a user next reads or interacts with the contract, the new rate is applied to the entire period since their last checkpoint, including time elapsed before the rate update.
+
+This is an intentional simplification for this first Solidity and Foundry portfolio project, not a production-ready reward-accounting model. A production implementation should use rate-period checkpoints or global reward-per-token accounting so historical accrual remains tied to the rate active during each period. The behaviour is covered by the Foundry test `testRewardRateChangeAppliesToUncheckpointedAccrual()`.
 
 ---
 
@@ -129,9 +134,8 @@ The current implementation deliberately preserves the existing application archi
 - OpenZeppelin `SafeERC20` is used for staking, unstaking, and emergency-withdrawal token transfers
 - Reward tokens are minted by the staking contract without a prefunded reward reserve or hard emission cap
 - Fee-on-transfer and deflationary staking tokens are not supported through balance-delta accounting; the project assumes standard ERC20 transfer semantics
-- Reward-rate updates are not checkpointed per user, so a new rate applies to all uncheckpointed accrual, including time elapsed before the update
 
-These trade-offs are intentional for this Sepolia portfolio demonstration. The Foundry test suite passes, and the repository changes are committed and up to date.
+These trade-offs are intentional for this Sepolia portfolio demonstration. The Foundry test suite passes.
 
 ---
 
