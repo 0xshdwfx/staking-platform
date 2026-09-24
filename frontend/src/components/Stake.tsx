@@ -22,6 +22,7 @@ export function Stake() {
 		isConfirming: isStakeConfirming,
 		error: stakeError,
 		isSuccess: isStakeSuccess,
+		emergencyWithdrawn,
 	} = useStake();
 	const { stakingTokenBalance, refetch: refetchBalance } =
 		useStakingTokenBalance();
@@ -52,6 +53,13 @@ export function Stake() {
 	};
 
 	const handleStake = () => {
+		if (emergencyWithdrawn) {
+			toast.error('Emergency withdrawal completed. This wallet cannot stake again.', {
+				duration: 10000,
+			});
+			return;
+		}
+
 		if (!amount) return;
 		const amountInWei = parseEther(amount);
 		stake(amountInWei);

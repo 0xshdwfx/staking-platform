@@ -1,4 +1,5 @@
 import {
+	useReadContract,
 	useWriteContract,
 	useAccount,
 	useWaitForTransactionReceipt,
@@ -7,6 +8,13 @@ import { CONTRACT_ADDRESSES, STAKING_ABI } from '../config/contracts';
 
 export function useStake() {
 	const { address } = useAccount();
+	const { data: emergencyWithdrawn } = useReadContract({
+		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
+		abi: STAKING_ABI,
+		functionName: 'emergencyWithdrawn',
+		args: [address],
+		query: { enabled: !!address },
+	});
 
 	const { writeContract, isPending, data: hash, error } = useWriteContract();
 
@@ -16,6 +24,10 @@ export function useStake() {
 	});
 
 	const stake = (amount: bigint) => {
+		if (emergencyWithdrawn === true) {
+			return;
+		}
+
 		writeContract({
 			address: CONTRACT_ADDRESSES.staking as `0x${string}`,
 			abi: STAKING_ABI,
@@ -31,5 +43,6 @@ export function useStake() {
 		isConfirming,
 		isSuccess,
 		error,
+		emergencyWithdrawn: emergencyWithdrawn === true,
 	};
 }

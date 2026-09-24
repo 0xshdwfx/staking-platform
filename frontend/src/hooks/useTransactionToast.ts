@@ -21,24 +21,38 @@ function parseErrorMessage(
 	const errorObj = error as {
 		functionName?: string;
 		args?: readonly unknown[];
+		name?: string;
 		details?: string;
 		shortMessage?: string;
 		message?: string;
+		data?: {
+			errorName?: string;
+			args?: readonly unknown[];
+		};
 		cause?: {
+			name?: string;
 			details?: string;
 			shortMessage?: string;
 			message?: string;
+			data?: {
+				errorName?: string;
+				args?: readonly unknown[];
+			};
 		};
 	};
 	const functionName = errorObj.functionName;
 	const args = errorObj.args?.[0];
 	const errorText = [
+		errorObj.name,
 		errorObj.details,
 		errorObj.shortMessage,
 		errorObj.message,
+		errorObj.data?.errorName,
+		errorObj.cause?.name,
 		errorObj.cause?.details,
 		errorObj.cause?.shortMessage,
 		errorObj.cause?.message,
+		errorObj.cause?.data?.errorName,
 		String(error),
 	]
 		.filter(Boolean)
@@ -68,8 +82,13 @@ function parseErrorMessage(
 		return 'Insufficient token allowance';
 	if (errorText.includes('InsufficientBalance'))
 		return 'Insufficient token balance';
-	if (errorText.includes('CannotStakeAfterEmergencyWithdraw'))
+	if (
+		operation === 'stake' &&
+		errorText.includes('CannotStakeAfterEmergencyWithdraw')
+	)
 		return 'Emergency withdrawal completed. This wallet cannot stake again.';
+	if (errorText.includes('EnforcedPause'))
+		return 'Staking is temporarily paused by the contract owner.';
 
 	const errorStr = String(error);
 	const lowerError = errorStr.toLowerCase();

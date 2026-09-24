@@ -125,13 +125,20 @@ export const STAKING_ABI = [
 		outputs: [],
 		stateMutability: 'nonpayable',
 	},
-	{
-		type: 'function',
-		name: 'paused',
-		inputs: [],
-		outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
-		stateMutability: 'view',
-	},
+		{
+			type: 'function',
+			name: 'paused',
+			inputs: [],
+			outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+			stateMutability: 'view',
+		},
+		{
+			type: 'function',
+			name: 'emergencyWithdrawn',
+			inputs: [{ name: '', type: 'address', internalType: 'address' }],
+			outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+			stateMutability: 'view',
+		},
 	{
 		type: 'function',
 		name: 'pendingRewards',
