@@ -646,13 +646,10 @@ contract StakingTest is Test {
 
         vm.warp(block.timestamp + TIME_ELAPSED_ONE_DAY);
 
-        uint256 expectedReward =
-            (USER_STAKE_AMOUNT * 2 days * NEW_REWARD_RATE) / (365 * 1e18);
+        uint256 expectedReward = (USER_STAKE_AMOUNT * 2 days * NEW_REWARD_RATE) / (365 * 1e18);
 
         assertEq(
-            staking.calculateReward(user),
-            expectedReward,
-            "the current rate applies to the full uncheckpointed period"
+            staking.calculateReward(user), expectedReward, "the current rate applies to the full uncheckpointed period"
         );
     }
 
