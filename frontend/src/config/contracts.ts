@@ -3,7 +3,117 @@ export const CONTRACT_ADDRESSES = {
 	stakingToken: '0xd0Db12859F3200e7b947b823F10dc7A460328C03',
 	rewardToken: '0x952F36979E0b61d81f86dbfDB36c16535713757A',
 	staking: '0x311124F2053389962ba2F3D389687Cb0d07c27F4',
+	faucet: '0x9582D6182dcFE9Dc9F279280B53a841F9e7001cf',
 };
+
+// ABI for the deployed STKFaucet contract
+export const STK_FAUCET_ABI = [
+	{
+		type: 'function',
+		name: 'claim',
+		inputs: [],
+		outputs: [],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'claimAmount',
+		inputs: [],
+		outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'hasClaimed',
+		inputs: [{ name: '', type: 'address', internalType: 'address' }],
+		outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'owner',
+		inputs: [],
+		outputs: [{ name: '', type: 'address', internalType: 'address' }],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'stakingToken',
+		inputs: [],
+		outputs: [{ name: '', type: 'address', internalType: 'contract IERC20' }],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'fund',
+		inputs: [{ name: 'amount', type: 'uint256', internalType: 'uint256' }],
+		outputs: [],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'event',
+		name: 'TokensClaimed',
+		inputs: [
+			{
+				name: 'user',
+				type: 'address',
+				indexed: true,
+				internalType: 'address',
+			},
+			{
+				name: 'amount',
+				type: 'uint256',
+				indexed: false,
+				internalType: 'uint256',
+			},
+		],
+		anonymous: false,
+	},
+	{
+		type: 'event',
+		name: 'FaucetFunded',
+		inputs: [
+			{
+				name: 'funder',
+				type: 'address',
+				indexed: true,
+				internalType: 'address',
+			},
+			{
+				name: 'amount',
+				type: 'uint256',
+				indexed: false,
+				internalType: 'uint256',
+			},
+		],
+		anonymous: false,
+	},
+	{
+		type: 'error',
+		name: 'STKFaucet__AlreadyClaimed',
+		inputs: [],
+	},
+	{
+		type: 'error',
+		name: 'STKFaucet__InsufficientFaucetBalance',
+		inputs: [],
+	},
+	{
+		type: 'error',
+		name: 'STKFaucet__InvalidClaimAmount',
+		inputs: [],
+	},
+	{
+		type: 'error',
+		name: 'STKFaucet__InvalidTokenAddress',
+		inputs: [],
+	},
+	{
+		type: 'error',
+		name: 'OwnableUnauthorizedAccount',
+		inputs: [{ name: 'account', type: 'address', internalType: 'address' }],
+	},
+];
 
 // ABIs from the compiled contracts
 export const STAKING_ABI = [
