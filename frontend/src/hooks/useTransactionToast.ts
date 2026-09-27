@@ -9,7 +9,13 @@ interface TransactionToastConfig {
 	pendingMessage: string;
 	confirmingMessage: string;
 	successMessage: string;
-	operation?: 'stake' | 'unstake' | 'claimReward' | 'emergencyWithdrawal' | 'approve';
+	operation?:
+		| 'stake'
+		| 'unstake'
+		| 'claimReward'
+		| 'emergencyWithdrawal'
+		| 'approve'
+		| 'claimStk';
 }
 
 function parseErrorMessage(
@@ -80,8 +86,18 @@ function parseErrorMessage(
 		return 'No pending rewards to claim';
 	if (errorText.includes('InsufficientAllowance'))
 		return 'Insufficient token allowance';
-	if (errorText.includes('InsufficientBalance'))
-		return 'Insufficient token balance';
+		if (errorText.includes('InsufficientBalance'))
+			return 'Insufficient token balance';
+		if (
+			operation === 'claimStk' &&
+			errorText.includes('STKFaucet__AlreadyClaimed')
+		)
+			return 'This wallet has already claimed its STK allocation.';
+		if (
+			operation === 'claimStk' &&
+			errorText.includes('STKFaucet__InsufficientFaucetBalance')
+		)
+			return 'The STK faucet is temporarily empty. Please try again later.';
 	if (
 		operation === 'stake' &&
 		errorText.includes('CannotStakeAfterEmergencyWithdraw')
