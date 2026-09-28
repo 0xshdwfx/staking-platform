@@ -134,7 +134,7 @@ The current implementation deliberately preserves the existing application archi
 - The staking contract can be paused by the owner; staking and unstaking are unavailable while paused, while emergency withdrawal remains available
 - OpenZeppelin `SafeERC20` is used for staking, unstaking, and emergency-withdrawal token transfers
 - Reward tokens are minted by the staking contract without a prefunded reward reserve or hard emission cap
-- Fee-on-transfer and deflationary staking tokens are not supported through balance-delta accounting; the project assumes standard ERC20 transfer semantics
+- The staking contract assumes standard ERC20 transfer behaviour, where the amount requested is the amount received. Fee-on-transfer and deflationary tokens are not supported because the contract does not account for a difference between the requested transfer amount and the amount actually received.
 - The self-service faucet is funded with a finite STK reserve; each wallet address can claim only once
 
 These trade-offs are intentional for this Sepolia portfolio demonstration. The Foundry test suite passes.
