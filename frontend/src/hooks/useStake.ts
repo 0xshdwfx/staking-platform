@@ -8,16 +8,22 @@ import { CONTRACT_ADDRESSES, STAKING_ABI } from '../config/contracts';
 
 type StakePreflightResult =
 	| { submitted: true }
-	| { submitted: false; reason: 'paused' | 'emergency-withdrawn' };
+	| {
+			submitted: false;
+			reason: 'paused' | 'emergency-withdrawn' | 'not-connected';
+	  };
 
 export function useStake() {
-	const { address } = useAccount();
-	const { data: emergencyWithdrawn } = useReadContract({
+	const { address } = useAccount();	
+	const {
+		data: emergencyWithdrawn,
+		refetch: refetchEmergencyWithdrawn,
+	} = useReadContract({
 		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
 		abi: STAKING_ABI,
 		functionName: 'emergencyWithdrawn',
 		args: [address],
-		query: { enabled: !!address },
+		query: { enabled: Boolean(address), refetchInterval: false },
 	});
 	const { data: paused, refetch: refetchPaused } = useReadContract({
 		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
@@ -26,21 +32,24 @@ export function useStake() {
 	});
 
 	const { writeContract, isPending, data: hash, error } = useWriteContract();
-
-	// This waits for the actual transaction receipt (mined on blockchain)
 	const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
 		hash,
 	});
 
 	const stake = async (amount: bigint): Promise<StakePreflightResult> => {
 		const { data: currentPaused } = await refetchPaused();
-
 		if (currentPaused === true) {
 			return { submitted: false, reason: 'paused' };
 		}
 
-		if (emergencyWithdrawn === true) {
+		const { data: currentEmergencyWithdrawn } =
+			await refetchEmergencyWithdrawn();
+		if (currentEmergencyWithdrawn === true) {
 			return { submitted: false, reason: 'emergency-withdrawn' };
+		}
+
+		if (!address) {
+			return { submitted: false, reason: 'not-connected' };
 		}
 
 		writeContract({
@@ -49,7 +58,7 @@ export function useStake() {
 			functionName: 'stake',
 			args: [amount],
 			account: address,
-			});
+		});
 
 		return { submitted: true };
 	};
@@ -61,6 +70,8 @@ export function useStake() {
 		isSuccess,
 		error,
 		emergencyWithdrawn: emergencyWithdrawn === true,
+		refetchEmergencyWithdrawn,
+		refetchPaused,
 		paused: paused === true,
 	};
 }

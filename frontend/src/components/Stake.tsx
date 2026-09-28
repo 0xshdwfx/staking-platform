@@ -39,10 +39,10 @@ export function Stake() {
 	const { refetch: refetchPending } = usePendingRewards();
 	const { symbol: stakingTokenSymbol } = useStakingTokenSymbol();
 
-	const isApproved = allowance && allowance > 0n;
+	const isApproved = allowance && allowance > BigInt(0);
 
 	const handleApprove = () => {
-		if (!nativeBalance || nativeBalance.value === 0n) {
+		if (!nativeBalance || nativeBalance.value === BigInt(0)) {
 			toast.error(
 				'Approval unavailable: this wallet has no Sepolia ETH for gas.',
 				{ duration: 10000 },
@@ -61,23 +61,17 @@ export function Stake() {
 			return;
 		}
 
-		if (emergencyWithdrawn) {
-			toast.error('Emergency withdrawal completed. This wallet cannot stake again.', {
-				duration: 10000,
-			});
-			return;
-		}
+		if (!emergencyWithdrawn && !amount) return;
+		const amountInWei = amount ? parseEther(amount) : BigInt(0);
+		const result = await stake(amountInWei);
 
-		if (!amount) return;
-		const amountInWei = parseEther(amount);
-		const submitted = await stake(amountInWei);
-
-		if (!submitted.submitted) {
+		if (!result.submitted) {
 			const message =
-				submitted.reason === 'paused'
+				result.reason === 'paused'
 					? 'Staking is temporarily paused by the contract owner.'
-					: 'Emergency withdrawal completed. This wallet cannot stake again.';
-
+					: result.reason === 'emergency-withdrawn'
+						? 'Emergency withdrawal completed. This wallet cannot stake again.'
+						: 'Connect your wallet before staking.';
 			toast.error(message, { duration: 10000 });
 			return;
 		}
@@ -89,7 +83,6 @@ export function Stake() {
 		? formatEther(stakingTokenBalance)
 		: '0.00';
 
-	// Refetch data after successful stake
 	useEffect(() => {
 		if (isStakeSuccess) {
 			refetchBalance();
@@ -99,7 +92,6 @@ export function Stake() {
 		}
 	}, [isStakeSuccess, refetchBalance, refetchStaked, refetchPending]);
 
-	// Approval toasts
 	useTransactionToast({
 		isPending: isApprovePending,
 		isConfirming: isApproveConfirming,
@@ -111,7 +103,6 @@ export function Stake() {
 		operation: 'approve',
 	});
 
-	// Stake toasts
 	useTransactionToast({
 		isPending: isStakePending,
 		isConfirming: isStakeConfirming,
@@ -125,39 +116,47 @@ export function Stake() {
 
 	return (
 		<div>
-			<h3 className='text-lg font-semibold text-white mb-4'>
+			<h3 className='mb-4 text-lg font-semibold text-white'>
 				Stake {stakingTokenSymbol}
 			</h3>
 
-			<p className='text-sm text-slate-400 mb-4'>
+			<p className='mb-4 text-sm text-slate-400'>
 				Balance:{' '}
-				<span className='text-white font-semibold'>
+				<span className='font-semibold text-white'>
 					{formattedBalance} {stakingTokenSymbol}
 				</span>
 			</p>
+
+			{emergencyWithdrawn ? (
+				<p className='mb-4 text-sm text-amber-400'>
+					Emergency withdrawal completed. This wallet cannot stake again.
+				</p>
+			) : null}
 
 			<input
 				type='number'
 				placeholder='Amount to stake'
 				value={amount}
-				onChange={(e) => setAmount(e.target.value)}
+				onChange={(event) => setAmount(event.target.value)}
 				disabled={isStakePending || isApprovePending || !isApproved}
-				className='w-full mb-4 px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
+				className='mb-4 w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-white placeholder-slate-400 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
 			/>
 
 			{!isApproved ? (
 				<button
-						onClick={handleApprove}
-						disabled={isApprovePending || !address}
-					className='w-full px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
+					type='button'
+					onClick={handleApprove}
+					disabled={isApprovePending || !address}
+					className='w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
 				>
 					{isApprovePending ? 'Approving...' : `Approve ${stakingTokenSymbol}`}
 				</button>
 			) : (
 				<button
+					type='button'
 					onClick={handleStake}
-					disabled={isStakePending || !amount}
-					className='w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer'
+					disabled={isStakePending || (!amount && !address)}
+					className='w-full cursor-pointer rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
 				>
 					{isStakePending ? 'Staking...' : 'Stake'}
 				</button>
