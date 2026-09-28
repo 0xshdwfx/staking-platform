@@ -61,18 +61,16 @@ export function Stake() {
 			return;
 		}
 
-		if (!emergencyWithdrawn && !amount) return;
-		const amountInWei = amount ? parseEther(amount) : BigInt(0);
+		if (!amount) return;
+		const amountInWei = parseEther(amount);
 		const result = await stake(amountInWei);
 
 		if (!result.submitted) {
-			const message =
-				result.reason === 'paused'
-					? 'Staking is temporarily paused by the contract owner.'
-					: result.reason === 'emergency-withdrawn'
-						? 'Emergency withdrawal completed. This wallet cannot stake again.'
-						: 'Connect your wallet before staking.';
-			toast.error(message, { duration: 10000 });
+			if (result.reason === 'paused') {
+				toast.error('Staking is temporarily paused by the contract owner.', {
+					duration: 10000,
+				});
+			}
 			return;
 		}
 
@@ -138,7 +136,7 @@ export function Stake() {
 				placeholder='Amount to stake'
 				value={amount}
 				onChange={(event) => setAmount(event.target.value)}
-				disabled={isStakePending || isApprovePending || !isApproved}
+					disabled={isStakePending || isApprovePending || !isApproved || emergencyWithdrawn}
 				className='mb-4 w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-white placeholder-slate-400 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
 			/>
 
@@ -155,7 +153,7 @@ export function Stake() {
 				<button
 					type='button'
 					onClick={handleStake}
-					disabled={isStakePending || (!amount && !address)}
+					disabled={isStakePending || emergencyWithdrawn || !amount || !address}
 					className='w-full cursor-pointer rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
 				>
 					{isStakePending ? 'Staking...' : 'Stake'}
