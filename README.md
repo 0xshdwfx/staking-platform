@@ -17,6 +17,7 @@ A secure and efficient ERC20 staking platform that allows users to stake STK tok
 - **Stake & Unstake:** Deposit and withdraw STK tokens anytime
 - **Earn Rewards:** Automatically accrue RWT rewards based on staked amount and time
 - **Claim Rewards:** Withdraw earned rewards independent of staked principal
+- **STK Faucet:** Claim 10 STK once per wallet address through the self-service Sepolia faucet
 - **Emergency Withdrawal:** Terminal full-exit mechanism that immediately returns principal and forfeits pending rewards
 - **Real-time Tracking:** Live reward calculations and balance updates
 - **Professional UI:** Responsive Tailwind CSS interface with transaction notifications
@@ -33,18 +34,16 @@ A secure and efficient ERC20 staking platform that allows users to stake STK tok
 
 ### Getting STK for Testing
 
-The current `StakingToken` contract does not include a public faucet, mint function, or token-claim flow. Anyone testing the platform therefore needs:
+The homepage includes a self-service faucet that distributes **10 STK once per wallet address**. Claims are available only while the faucet has sufficient STK reserves.
 
-- Sepolia ETH for transaction fees, obtained from a Sepolia faucet
-- STK transferred to their wallet by the project owner
+Anyone testing the platform therefore needs:
 
-The current STK contract is:
+- Sepolia ETH for transaction fees, obtained from a Sepolia ETH faucet
+- STK claimed through the platform faucet
 
-```text
-0xd0Db12859F3200e7b947b823F10dc7A460328C03
-```
+The faucet claim is an on-chain transaction and therefore also requires Sepolia ETH for gas. The faucet supplies STK only; it does not supply Sepolia ETH.
 
-Import this address into the wallet if STK is not displayed automatically. Do not use an older STK deployment with the current staking contract. The imported token address must match the address listed in the [verified contract table](#smart-contracts).
+If STK is not displayed automatically, import the current STK contract address shown in the [verified contract table](#smart-contracts) into the wallet. Do not use an older STK deployment with the current staking contract.
 
 ### 2. View Your Stats
 
@@ -76,7 +75,7 @@ Import this address into the wallet if STK is not displayed automatically. Do no
 - **⚠️ Warning:** Forfeits all pending rewards
 - The full staked balance must be withdrawn; partial emergency withdrawals revert
 - Transfers the complete staked STK balance immediately
-- The address cannot stake again after an emergency withdrawal under the current terminal-state design
+- The address cannot stake again after an emergency withdrawal under the current terminal-state design; the frontend displays this restriction and disables staking controls
 
 ---
 
@@ -88,7 +87,8 @@ All contracts are deployed on **Sepolia Testnet** and verified on Etherscan.
 | ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | **Staking**            | `0x311124F2053389962ba2F3D389687Cb0d07c27F4` | [View Code](https://sepolia.etherscan.io/address/0x311124F2053389962ba2F3D389687Cb0d07c27F4#code) |
 | **StakingToken (STK)** | `0xd0Db12859F3200e7b947b823F10dc7A460328C03` | [View Code](https://sepolia.etherscan.io/address/0xd0Db12859F3200e7b947b823F10dc7A460328C03#code) |
-| **RewardToken (RWT)**  | `0x952F36979e0b61d81f86dbfDB36c16535713757A` | [View Code](https://sepolia.etherscan.io/address/0x952F36979e0b61d81f86dbfDB36c16535713757A#code) |
+| **RewardToken (RWT)**  | `0x952F36979E0b61d81f86dbfDB36c16535713757A` | [View Code](https://sepolia.etherscan.io/address/0x952F36979E0b61d81f86dbfDB36c16535713757A#code) |
+| **STKFaucet**          | `0x9582D6182dcFE9Dc9F279280B53a841F9e7001cf` | [View Code](https://sepolia.etherscan.io/address/0x9582d6182dcfe9dc9f279280b53a841f9e7001cf#code) |
 
 ---
 
@@ -130,10 +130,12 @@ This is an intentional simplification for this first Solidity and Foundry portfo
 
 The current implementation deliberately preserves the existing application architecture and public interface while applying targeted contract hardening:
 
-- Emergency withdrawal is a terminal full exit: partial withdrawals revert, pending rewards are forfeited, and post-exit staking is blocked
+- Emergency withdrawal is a terminal full exit: partial withdrawals revert, pending rewards are forfeited, and post-exit staking is blocked; the frontend reflects this terminal state
+- The staking contract can be paused by the owner; staking and unstaking are unavailable while paused, while emergency withdrawal remains available
 - OpenZeppelin `SafeERC20` is used for staking, unstaking, and emergency-withdrawal token transfers
 - Reward tokens are minted by the staking contract without a prefunded reward reserve or hard emission cap
 - Fee-on-transfer and deflationary staking tokens are not supported through balance-delta accounting; the project assumes standard ERC20 transfer semantics
+- The self-service faucet is funded with a finite STK reserve; each wallet address can claim only once
 
 These trade-offs are intentional for this Sepolia portfolio demonstration. The Foundry test suite passes.
 
