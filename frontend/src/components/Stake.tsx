@@ -53,7 +53,7 @@ export function Stake() {
 		approve();
 	};
 
-	const handleStake = () => {
+	const handleStake = async () => {
 		if (paused) {
 			toast.error('Staking is temporarily paused by the contract owner.', {
 				duration: 10000,
@@ -70,7 +70,18 @@ export function Stake() {
 
 		if (!amount) return;
 		const amountInWei = parseEther(amount);
-		stake(amountInWei);
+		const submitted = await stake(amountInWei);
+
+		if (!submitted.submitted) {
+			const message =
+				submitted.reason === 'paused'
+					? 'Staking is temporarily paused by the contract owner.'
+					: 'Emergency withdrawal completed. This wallet cannot stake again.';
+
+			toast.error(message, { duration: 10000 });
+			return;
+		}
+
 		setAmount('');
 	};
 

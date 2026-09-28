@@ -6,6 +6,10 @@ import {
 } from 'wagmi';
 import { CONTRACT_ADDRESSES, STAKING_ABI } from '../config/contracts';
 
+type StakePreflightResult =
+	| { submitted: true }
+	| { submitted: false; reason: 'paused' | 'emergency-withdrawn' };
+
 export function useStake() {
 	const { address } = useAccount();
 	const { data: emergencyWithdrawn } = useReadContract({
@@ -15,7 +19,7 @@ export function useStake() {
 		args: [address],
 		query: { enabled: !!address },
 	});
-	const { data: paused } = useReadContract({
+	const { data: paused, refetch: refetchPaused } = useReadContract({
 		address: CONTRACT_ADDRESSES.staking as `0x${string}`,
 		abi: STAKING_ABI,
 		functionName: 'paused',
@@ -28,9 +32,15 @@ export function useStake() {
 		hash,
 	});
 
-	const stake = (amount: bigint) => {
+	const stake = async (amount: bigint): Promise<StakePreflightResult> => {
+		const { data: currentPaused } = await refetchPaused();
+
+		if (currentPaused === true) {
+			return { submitted: false, reason: 'paused' };
+		}
+
 		if (emergencyWithdrawn === true) {
-			return;
+			return { submitted: false, reason: 'emergency-withdrawn' };
 		}
 
 		writeContract({
@@ -39,7 +49,9 @@ export function useStake() {
 			functionName: 'stake',
 			args: [amount],
 			account: address,
-		});
+			});
+
+		return { submitted: true };
 	};
 
 	return {
