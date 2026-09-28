@@ -8,6 +8,7 @@ import { Stake } from '../components/Stake';
 import { ClaimRewards } from '../components/ClaimRewards';
 import { Unstake } from '../components/Unstake';
 import { EmergencyWithdrawal } from '../components/EmergencyWithdrawal';
+import { STKFaucet } from '../components/STKFaucet';
 import { BiSolidCoin } from 'react-icons/bi';
 
 const Home: NextPage = () => {
@@ -47,8 +48,13 @@ const Home: NextPage = () => {
 						</div>
 					</div>
 
-					{/* Actions Section */}
-					<div className='grid gap-6 md:grid-cols-3'>
+						{/* Faucet Section */}
+						<div className='mb-6 rounded-lg border border-purple-700 bg-purple-900/20 p-6 text-white'>
+							<STKFaucet />
+						</div>
+
+						{/* Actions Section */}
+						<div className='grid gap-6 md:grid-cols-3'>
 						<div className='rounded-lg border border-slate-700 bg-slate-800 p-6 text-white'>
 							<Stake />
 						</div>

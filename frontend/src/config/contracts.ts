@@ -17,7 +17,7 @@ export const STK_FAUCET_ABI = [
 	},
 	{
 		type: 'function',
-		name: 'claimAmount',
+			name: 'CLAIM_AMOUNT',
 		inputs: [],
 		outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
 		stateMutability: 'view',
@@ -38,7 +38,7 @@ export const STK_FAUCET_ABI = [
 	},
 	{
 		type: 'function',
-		name: 'stakingToken',
+			name: 'STAKING_TOKEN',
 		inputs: [],
 		outputs: [{ name: '', type: 'address', internalType: 'contract IERC20' }],
 		stateMutability: 'view',
