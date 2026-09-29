@@ -40,4 +40,12 @@ contract StakingInvariantTest is Test {
 
         assertGe(stakingTokenBalance, recordedTotalStaked, "staking contract balance is below recorded total staked");
     }
+
+    function invariant_emergencyWithdrawnUserHasNoStake() public view {
+        if (staking.emergencyWithdrawn(user)) {
+            Staking.UserInfo memory userInfo = staking.getUserInfo(user);
+
+            assertEq(userInfo.stakedAmount, 0, "emergency-withdrawn user still has a recorded stake");
+        }
+    }
 }
