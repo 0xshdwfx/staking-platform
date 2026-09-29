@@ -200,6 +200,13 @@ forge build
 forge test
 ```
 
+The project also includes a focused Foundry invariant suite covering staking-token solvency and emergency-withdrawal finality. The suite passed 1,000 randomized runs and 500,000 generated handler calls for each invariant:
+
+```bash
+FOUNDRY_INVARIANT_RUNS=1000 forge test \
+  --match-path "test/invariant/StakingInvariantTest.t.sol"
+```
+
 ## Portfolio
 
 This project is part of my Web3 development portfolio showcasing:
