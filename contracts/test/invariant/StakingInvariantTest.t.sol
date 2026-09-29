@@ -48,4 +48,13 @@ contract StakingInvariantTest is Test {
             assertEq(userInfo.stakedAmount, 0, "emergency-withdrawn user still has a recorded stake");
         }
     }
+
+    function invariant_emergencyWithdrawnUserCannotStake() public {
+        if (staking.emergencyWithdrawn(user)) {
+            vm.prank(user);
+            vm.expectRevert(Staking.Staking__CannotStakeAfterEmergencyWithdraw.selector);
+
+            staking.stake(1 ether);
+        }
+    }
 }
