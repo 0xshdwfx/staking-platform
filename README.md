@@ -1,6 +1,6 @@
 # Staking Platform
 
-A professional, full-stack staking platform built with smart contracts and modern web technologies.
+A full-stack ERC-20 staking platform deployed on Sepolia, built with Solidity, Foundry, Next.js, and Wagmi.
 
 **Live Site:** [Staking Platform](https://staking-platform.0xs.to/)
 
